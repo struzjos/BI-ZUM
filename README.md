@@ -1,0 +1,1 @@
+# BI-ZUM: semestralni prace
