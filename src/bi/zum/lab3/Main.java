@@ -24,7 +24,7 @@ public class Main {
             public void run() {
                 try {
                     ZumGraphFrame app = new ZumGraphFrame();
-                    app.setSize(800, 925);
+                    app.setSize(640, 740);
                     app.setVisible(true);
                     app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 

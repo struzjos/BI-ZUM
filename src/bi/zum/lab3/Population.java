@@ -12,7 +12,6 @@ import java.util.Random;
  * @author Josef Struz
  */
 public class Population extends AbstractPopulation {
-  
 
     public Population(AbstractEvolution evolution, int size) {
         individuals = new Individual[size];
@@ -39,33 +38,39 @@ public class Population extends AbstractPopulation {
             selected.add(individual);
             individual = individuals[rndm.nextInt(individuals.length)];
         }
-        */
-        
+         */
         // TODO: implement your own (and better) method of selection
         Random rndm = new Random();
-        for(int i=0; i<count; i++) {
-            
+        int membersCount = this.individuals.length / 10;
+        if (membersCount < 10 && this.individuals.length >= 10) {
+            membersCount = 10;
+        } else if (membersCount == 0 && this.individuals.length >= 1) {
+            membersCount = 1;
+        }
+        while (selected.size() < count) {
+            //System.out.println("bi.zum.lab3.Population.selectIndividuals() " + membersCount);
+
             double bestFitness = Double.NEGATIVE_INFINITY;
             AbstractIndividual winner = null;
-            
 
-            int membersCount = (int) this.individuals.length / 100;
-            if (membersCount < 10 && this.individuals.length >= 10 )
-                membersCount = 10;
-            else if(membersCount == 0 && this.individuals.length >= 1)
-                membersCount = 1;
-            for(int k=0; k<membersCount; k++) {
-                
+            for (int k = 0; k < membersCount; k++) {
+
                 AbstractIndividual candidate = this.individuals[rndm.nextInt(this.individuals.length)];
-                if(candidate.getFitness() > bestFitness) {
+                boolean alreadyThere = false;
+                for( AbstractIndividual s : selected ){
+                    if( candidate == s && this.individuals.length > 1 ){
+                        alreadyThere = true;
+                    }
+                }
+                if (candidate.getFitness() > bestFitness && !alreadyThere) {
                     winner = candidate;
                     bestFitness = candidate.getFitness();
                 }
             }
-            
+
             selected.add(winner);
         }
-        
+
         return selected;
     }
 }
