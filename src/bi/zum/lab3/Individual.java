@@ -23,10 +23,16 @@ import java.util.Random;
 public class Individual extends AbstractIndividual {
 
     private double fitness = Double.NaN;
-    private AbstractEvolution evolution = null;
+    private Evolution evolution = null;
 
     private boolean[] gen = null;
     private List<Integer> rndmEdges = new ArrayList<>();
+
+    private ArrayList<Integer> trueValues;
+    private ArrayList<Integer> falseValues;
+
+    private boolean fitnessComputed;
+    private int distance;
 
     // @TODO Declare your genotype
     /**
@@ -36,9 +42,12 @@ public class Individual extends AbstractIndividual {
      * @param init <code>true</code> if the individial should be initialized
      * randomly (we do wish to initialize if we copy the individual)
      */
-    public Individual(AbstractEvolution evolution, boolean init) {
+    public Individual(Evolution evolution, boolean init, ArrayList<Integer> trueVal, ArrayList<Integer> falseVal) {
+        this.trueValues = trueVal;
+        this.falseValues = falseVal;
         this.evolution = evolution;
         this.gen = new boolean[evolution.getNodesCount()];
+        this.fitnessComputed = false;
         Random rndm = new Random();
 
         for (int i = 0; i < StateSpace.getNodes().size(); i++) {
@@ -54,8 +63,8 @@ public class Individual extends AbstractIndividual {
                 }
             }
             this.repair();
-            computeFitness();
-            HillClimb(this.evolution.getGenerations()/100);
+            //HillClimb(this.evolution.getGenerations() / 100);
+            //this.repair();
             this.minimalize();
 
         }
@@ -65,7 +74,8 @@ public class Individual extends AbstractIndividual {
         Random rndm = new Random();
 
         //int numberOfGens = (int)(this.evolution.getNodesCount() * this.evolution.getMutationProbability());
-        int numberOfGenMutated = this.evolution.getNodesCount() / 50;
+        int numberOfGenMutated = (int) (this.evolution.getNodesCount() * this.evolution.getMutationProbability());
+        //System.out.println("number of gen mutated: " + numberOfGenMutated);
 
         //Individual next = new Individual(this.evolution, false);
         for (int i = 0; i < numberOfSteps; i++) {
@@ -76,19 +86,19 @@ public class Individual extends AbstractIndividual {
                 next.gen[tmpRandInt] = !next.gen[tmpRandInt];
             }
             next.repair();
-            next.computeFitness();
 
             //double r = rndm.nextDouble();
             //double prop = Math.exp((next.getFitness() - this.getFitness()) / Math.log10(numberOfSteps - i));
-            //System.out.println("i: " + i + ", this.fitness: " + this.fitness + ", next.fitness: " + next.getFitness());
+            //System.out.println("i: " + i + ", this.getFitness(): " + this.getFitness() + ", next.getFitness(): " + next.getFitness());
             if (next.getFitness() >= this.getFitness()) {
                 System.arraycopy(next.gen, 0, this.gen, 0, this.gen.length);
-                this.fitness = next.fitness;
+                this.fitness = next.getFitness();
+                this.distance = next.getDistance();
             }
             /*else if (r < prop) {
                 //System.out.println("Prop: " + prop + ", this.fitness: " + this.fitness + ", next.fitness: " + next.getFitness() + ", rndm.nextDouble(): " + r);
                 System.arraycopy(next.gen, 0, this.gen, 0, this.gen.length);
-                this.fitness = next.fitness;
+                this.fitness = next.getFitness();
             }*/
         }
     }
@@ -105,12 +115,15 @@ public class Individual extends AbstractIndividual {
      */
     @Override
     public void computeFitness() {
-        this.fitness = this.gen.length;
+        this.distance = 0;
         for (int i = 0; i < this.gen.length; i++) {
             if (this.gen[i]) {
-                this.fitness--;
+                this.distance++;
             }
         }
+        this.fitness = this.gen.length - this.distance + minimalPotencial() / 100;
+        this.fitnessComputed = true;
+        System.out.println("fitness = " + this.gen.length + " - " + this.distance + " + " + minimalPotencial() + " / 100 = " + fitness );
     }
 
     /**
@@ -120,7 +133,17 @@ public class Individual extends AbstractIndividual {
      */
     @Override
     public double getFitness() {
+        if (!this.fitnessComputed) {
+            this.computeFitness();
+        }
         return this.fitness;
+    }
+
+    public int getDistance() {
+        if (!this.fitnessComputed) {
+            this.computeFitness();
+        }
+        return this.distance;
     }
 
     /**
@@ -140,8 +163,6 @@ public class Individual extends AbstractIndividual {
             }
         }
         this.repair();
-        this.computeFitness();
-        //HillClimb(evolution.getGenerations() / 100);
         this.minimalize();
     }
 
@@ -159,8 +180,8 @@ public class Individual extends AbstractIndividual {
 
         Random rndm = new Random();
 
-        Individual son = new Individual(evolution, false);
-        Individual deauther = new Individual(evolution, false);
+        Individual son = new Individual(evolution, false, trueValues, falseValues);
+        Individual deauther = new Individual(evolution, false, trueValues, falseValues);
         boolean change[] = new boolean[this.gen.length];
         int numOfChanges = 0;
 
@@ -172,7 +193,6 @@ public class Individual extends AbstractIndividual {
 
         int numberOfCuts = rndm.nextInt((this.evolution.getNodesCount() / 100) - 2) + 2;
         int sizeOfOneCut = this.evolution.getNodesCount() / numberOfCuts / 2;
-        //int sizeOfLastCut = this.evolution.getNodesCount() % numberOfCuts;
         if (rndm.nextBoolean() && numberOfCuts >= 1) {
             numberOfCuts--;
         }
@@ -184,7 +204,6 @@ public class Individual extends AbstractIndividual {
 
         for (int i = 0; i < numberOfCuts; i++) {
             for (int j = 0; j < 10; j++) {
-                //System.out.println("bi.zum.lab3.Individual.crossover()");
                 int rndmNodeId = rndm.nextInt(this.gen.length);
                 if (!change[rndmNodeId]) {
                     for (int k = 0; k < StateSpace.getNode(rndmNodeId).expand().size(); k++) {
@@ -214,35 +233,7 @@ public class Individual extends AbstractIndividual {
             }
             expand.clear();
         }
-        /*
-        System.out.println("numOfChanges: " + numOfChanges + " / " + evolution.getNodesCount());
 
-        int cut1 = rndm.nextInt(this.gen.length);
-        int cut2 = rndm.nextInt(this.gen.length);
-
-        if (cut1 > cut2) {
-            int tmp = cut1;
-            cut1 = cut2;
-            cut2 = tmp;
-        }
-
-
-        for (int i = 0; i < cut1; i++) {
-            son.gen[i] = this.gen[i];
-            deauther.gen[i] = other.isNodeSelected(i);
-        }
-
-        for (int i = cut1; i < cut2; i++) {
-            son.gen[i] = other.isNodeSelected(i);
-            deauther.gen[i] = this.gen[i];
-        }
-
-        for (int i = cut2; i < this.gen.length; i++) {
-            son.gen[i] = this.gen[i];
-            deauther.gen[i] = other.isNodeSelected(i);
-        }
-
-         */
         son.repair();
         deauther.repair();
 
@@ -261,11 +252,12 @@ public class Individual extends AbstractIndividual {
      */
     @Override
     public Individual deepCopy() {
-        Individual newOne = new Individual(evolution, false);
+        Individual newOne = new Individual(evolution, false, trueValues, falseValues);
 
         System.arraycopy(this.gen, 0, newOne.gen, 0, this.gen.length);
 
-        newOne.fitness = this.fitness;
+        newOne.fitness = this.getFitness();
+        newOne.distance = this.getDistance();
         return newOne;
     }
 
@@ -277,51 +269,57 @@ public class Individual extends AbstractIndividual {
 
         /* We iterate over all the edges */
         Random rndm = new Random();
-        /*
-        for (Node n : StateSpace.getNodes()) {
-            if (this.gen[n.getId()] && n.expand().size() <= 1) {
-                this.gen[n.getId()] = false;
-            }
+
+        for (int i : falseValues) {
+            gen[i] = false;
         }
-         */
+        for (int i : trueValues) {
+            gen[i] = true;
+        }
         for (Edge e : StateSpace.getEdges()) {
             if (!this.gen[e.getFromId()] && !this.gen[e.getToId()]) {
-                if (StateSpace.getNode(e.getFromId()).expand().size() <= 1) {
-                    this.gen[e.getToId()] = true;
-                } else if (StateSpace.getNode(e.getToId()).expand().size() <= 1) {
-                    this.gen[e.getFromId()] = true;
-                } else if (rndm.nextBoolean()) {
+                if (rndm.nextBoolean()) {
                     this.gen[e.getFromId()] = true;
                 } else {
                     this.gen[e.getToId()] = true;
                 }
             }
         }
+        this.fitnessComputed = false;
     }
 
     private int minimalPotencial() {
-        //Random rndm = new Random();
         boolean unnecessary;
         int counter = 0;
-        for (Node n : StateSpace.getNodes()) {
-            unnecessary = true;
-            for (Node ne : n.expand()) {
-                if (!this.gen[ne.getId()]) {
-                    unnecessary = false;
-                    break;
+
+        Collections.shuffle(this.rndmEdges);
+
+        for (int num : this.rndmEdges) {
+            Node n = StateSpace.getNode(num);
+            if (n.expand().size() > 1 && this.gen[n.getId()]) {
+                unnecessary = true;
+                for (Node ne : n.expand()) {
+                    if (!this.gen[ne.getId()] || ne.getId() == n.getId()) {
+                        unnecessary = false;
+                        break;
+                    }
                 }
-            }
-            if (unnecessary) {
-                counter++;
+                if (unnecessary) {
+                    counter++;
+                }
             }
         }
         return counter;
+
     }
 
     private void minimalize() {
+
         Collections.shuffle(this.rndmEdges);
 
+        //this.computeFitness();
         boolean unnecessary;
+        int counter = 0;
 
         for (int num : this.rndmEdges) {
             Node n = StateSpace.getNode(num);
@@ -335,10 +333,16 @@ public class Individual extends AbstractIndividual {
                 }
                 if (unnecessary) {
                     this.gen[n.getId()] = false;
+                    if (this.getDistance() - counter < Math.min(6100, this.evolution.lowestDistance)) {
+                        break;
+                    }
+                    counter++;
                 }
             }
         }
-        //this.repair();
+        //System.out.println("this.evolution.lowestDistance: " + this.evolution.lowestDistance);
+        //System.out.println("counter: " + counter);
+        this.fitnessComputed = false;
     }
 
     /**

@@ -1,9 +1,9 @@
 package bi.zum.lab3;
 
-import cz.cvut.fit.zum.api.ga.AbstractEvolution;
+//import cz.cvut.fit.zum.api.ga.AbstractEvolution;
 import cz.cvut.fit.zum.api.ga.AbstractIndividual;
 import cz.cvut.fit.zum.api.ga.AbstractPopulation;
-import cz.cvut.fit.zum.data.StateSpace;
+//import cz.cvut.fit.zum.data.StateSpace;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,11 +13,14 @@ import java.util.Random;
  */
 public class Population extends AbstractPopulation {
 
-    public Population(AbstractEvolution evolution, int size) {
+    //@Override
+    private Individual[] individuals;
+
+    public Population(Evolution evolution, int size, ArrayList<Integer> trueVal, ArrayList<Integer> falseVal) {
         individuals = new Individual[size];
         for (int i = 0; i < individuals.length; i++) {
-            individuals[i] = new Individual(evolution, true);
-            individuals[i].computeFitness();
+            individuals[i] = new Individual(evolution, true, trueVal, falseVal);
+            //individuals[i].computeFitness();
         }
 
     }
@@ -28,8 +31,70 @@ public class Population extends AbstractPopulation {
      * @param count The number of individuals to be selected
      * @return List of selected individuals
      */
-    public List<AbstractIndividual> selectIndividuals(int count) {
-        ArrayList<AbstractIndividual> selected = new ArrayList<AbstractIndividual>();
+    @Override
+    public int size() {
+        return individuals.length;
+    }
+
+    @Override
+    public double getAvgFitness() {
+        double fitSum = 0.0;
+        for (Individual individual : individuals) {
+            fitSum += individual.getFitness();
+        }
+        return fitSum / individuals.length;
+    }
+
+    @Override
+    public Individual getBestIndividual() {
+        Individual bestIndividual = individuals[0];
+        for (Individual individual : individuals) {
+            if (individual.getFitness() > bestIndividual.getFitness()) {
+                bestIndividual = individual;
+            }
+        }
+        return bestIndividual;
+    }
+    
+    @Override
+    public double getBestFitness() {
+        double bestFitness = 0.0;
+        for (Individual individual : individuals) {
+            if (individual.getFitness() > bestFitness) {
+                bestFitness = individual.getFitness();
+            }
+        }
+        return bestFitness;
+    }
+    
+    public void setIndividualAt(int index, Individual individual) {
+        individuals[index] = individual;
+    }
+
+    public int getLowestDistance() {
+        int tmpLowestDistance = Integer.MAX_VALUE;
+        for (Individual individual : individuals) {
+            if (individual.getDistance() < tmpLowestDistance) {
+                tmpLowestDistance = individual.getDistance();
+            }
+        }
+        return tmpLowestDistance;
+    }
+    
+    public void replaceTheWeakestOne(Individual individual){
+        int index = 0;
+        double lowestFitness = individuals[0].getFitness();
+        for (int i = 0; i < individuals.length; i++) {
+            if (individuals[i].getFitness() < lowestFitness) {
+                index = i;
+                lowestFitness = individuals[i].getFitness();
+            }
+        }
+        individuals[index] = individual;
+    }
+
+    public List<Individual> selectIndividuals(int count) {
+        ArrayList<Individual> selected = new ArrayList<>();
 
         // example of random selection of N individuals
         /*
@@ -41,24 +106,22 @@ public class Population extends AbstractPopulation {
          */
         // TODO: implement your own (and better) method of selection
         Random rndm = new Random();
-        int membersCount = this.individuals.length / 10;
-        if (membersCount < 10 && this.individuals.length >= 10) {
-            membersCount = 10;
-        } else if (membersCount == 0 && this.individuals.length >= 1) {
+        int membersCount = this.individuals.length / 10 * 4;
+        if (membersCount == 0 && this.individuals.length >= 1) {
             membersCount = 1;
         }
         while (selected.size() < count) {
             //System.out.println("bi.zum.lab3.Population.selectIndividuals() " + membersCount);
 
             double bestFitness = Double.NEGATIVE_INFINITY;
-            AbstractIndividual winner = null;
+            Individual winner = null;
 
             for (int k = 0; k < membersCount; k++) {
 
-                AbstractIndividual candidate = this.individuals[rndm.nextInt(this.individuals.length)];
+                Individual candidate = this.individuals[rndm.nextInt(this.individuals.length)];
                 boolean alreadyThere = false;
-                for( AbstractIndividual s : selected ){
-                    if( candidate == s && this.individuals.length > 1 ){
+                for (Individual s : selected) {
+                    if (candidate == s && this.individuals.length > 1) {
                         alreadyThere = true;
                     }
                 }
