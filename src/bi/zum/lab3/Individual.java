@@ -63,8 +63,8 @@ public class Individual extends AbstractIndividual {
                 }
             }
             this.repair();
-            //HillClimb(this.evolution.getGenerations() / 100);
-            //this.repair();
+            HillClimb(this.evolution.getGenerations() / 100);
+            this.repair();
             this.minimalize();
 
         }
@@ -87,19 +87,19 @@ public class Individual extends AbstractIndividual {
             }
             next.repair();
 
-            //double r = rndm.nextDouble();
-            //double prop = Math.exp((next.getFitness() - this.getFitness()) / Math.log10(numberOfSteps - i));
+            double r = rndm.nextDouble();
+            double prop = Math.exp((next.getFitness() - this.getFitness()) / Math.log10(numberOfSteps - i));
             //System.out.println("i: " + i + ", this.getFitness(): " + this.getFitness() + ", next.getFitness(): " + next.getFitness());
             if (next.getFitness() >= this.getFitness()) {
                 System.arraycopy(next.gen, 0, this.gen, 0, this.gen.length);
                 this.fitness = next.getFitness();
                 this.distance = next.getDistance();
             }
-            /*else if (r < prop) {
+            else if (r < prop) {
                 //System.out.println("Prop: " + prop + ", this.fitness: " + this.fitness + ", next.fitness: " + next.getFitness() + ", rndm.nextDouble(): " + r);
                 System.arraycopy(next.gen, 0, this.gen, 0, this.gen.length);
                 this.fitness = next.getFitness();
-            }*/
+            }
         }
     }
 
@@ -121,9 +121,9 @@ public class Individual extends AbstractIndividual {
                 this.distance++;
             }
         }
-        this.fitness = this.gen.length - this.distance + minimalPotencial() / 100;
+        this.fitness = this.gen.length - this.distance + minimalPotencial() / 10;
         this.fitnessComputed = true;
-        System.out.println("fitness = " + this.gen.length + " - " + this.distance + " + " + minimalPotencial() + " / 100 = " + fitness );
+        //System.out.println("fitness = " + this.gen.length + " - " + this.distance + " + " + minimalPotencial() + " / 100 = " + fitness );
     }
 
     /**
@@ -158,7 +158,7 @@ public class Individual extends AbstractIndividual {
         Random rndm = new Random();
 
         for (int i = 0; i < this.gen.length; i++) {
-            if (rndm.nextDouble() < mutationRate) {
+            if (rndm.nextDouble() < mutationRate + mutationRate * this.evolution.disasterCounter / 10) {
                 this.gen[i] = !this.gen[i];
             }
         }
@@ -203,7 +203,7 @@ public class Individual extends AbstractIndividual {
         List<Integer> expand = new ArrayList<>();
 
         for (int i = 0; i < numberOfCuts; i++) {
-            for (int j = 0; j < 10; j++) {
+            for (int j = 0; j < 4; j++) {
                 int rndmNodeId = rndm.nextInt(this.gen.length);
                 if (!change[rndmNodeId]) {
                     for (int k = 0; k < StateSpace.getNode(rndmNodeId).expand().size(); k++) {
@@ -270,12 +270,6 @@ public class Individual extends AbstractIndividual {
         /* We iterate over all the edges */
         Random rndm = new Random();
 
-        for (int i : falseValues) {
-            gen[i] = false;
-        }
-        for (int i : trueValues) {
-            gen[i] = true;
-        }
         for (Edge e : StateSpace.getEdges()) {
             if (!this.gen[e.getFromId()] && !this.gen[e.getToId()]) {
                 if (rndm.nextBoolean()) {
@@ -285,12 +279,21 @@ public class Individual extends AbstractIndividual {
                 }
             }
         }
+        for (int i : trueValues) {
+            gen[i] = true;
+        }
+        for (int i : falseValues) {
+            gen[i] = false;
+        }
         this.fitnessComputed = false;
     }
 
     private int minimalPotencial() {
         boolean unnecessary;
         int counter = 0;
+
+        boolean tmpGen[] = new boolean[this.gen.length];
+        System.arraycopy(this.gen, 0, tmpGen, 0, this.gen.length);
 
         Collections.shuffle(this.rndmEdges);
 
@@ -305,6 +308,7 @@ public class Individual extends AbstractIndividual {
                     }
                 }
                 if (unnecessary) {
+                    tmpGen[n.getId()] = false;
                     counter++;
                 }
             }
@@ -333,7 +337,7 @@ public class Individual extends AbstractIndividual {
                 }
                 if (unnecessary) {
                     this.gen[n.getId()] = false;
-                    if (this.getDistance() - counter < Math.min(6100, this.evolution.lowestDistance)) {
+                    if (this.getDistance() - counter/* + this.evolution.bestFit - this.evolution.lowestDistance*/ < this.evolution.lowestDistance) {
                         break;
                     }
                     counter++;
@@ -358,7 +362,7 @@ public class Individual extends AbstractIndividual {
          * list of indices of nodes in the vertex cover
          */
         int i = 0;
-
+        /*
         for (; i < this.gen.length; i++) {
             if (this.gen[i]) {
                 sb.append(i);
@@ -366,10 +370,13 @@ public class Individual extends AbstractIndividual {
                 break;
             }
         }
+         */
         for (; i < this.gen.length; i++) {
             if (this.gen[i]) {
-                sb.append(", ");
-                sb.append(i);
+                sb.append("1");
+            }
+            else{
+                sb.append("0");
             }
         }
         return sb.toString();

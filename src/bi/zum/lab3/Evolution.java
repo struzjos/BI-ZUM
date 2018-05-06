@@ -13,7 +13,7 @@ import org.openide.util.lookup.ServiceProvider;
 
 interface ConstantStuff {
 
-    public static final int NUM_OF_ISLANDS = 4;
+    public static final int NUM_OF_ISLANDS = 8;
 }
 
 /**
@@ -50,6 +50,7 @@ public class Evolution extends AbstractEvolution<Individual> implements Runnable
     public int lowestDistance = Integer.MAX_VALUE;
     public double bestFit = 0.0;
     public double fitSum = 0.0;
+    public int disasterCounter = 0;
 
     public Evolution() {
         isFinished = false;
@@ -192,7 +193,7 @@ public class Evolution extends AbstractEvolution<Individual> implements Runnable
          */
 
         // Run evolution cycle for the number of generations set in GUI
-        int disasterCounter = 0;
+        
         double previousBestFit = bestFit;
         for (int g = 0; g < generations; g++) {
 
