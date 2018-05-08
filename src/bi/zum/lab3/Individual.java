@@ -1,21 +1,14 @@
 package bi.zum.lab3;
 
-import cz.cvut.fit.zum.api.ga.AbstractEvolution;
 import cz.cvut.fit.zum.api.ga.AbstractIndividual;
 import cz.cvut.fit.zum.data.StateSpace;
 import cz.cvut.fit.zum.util.Pair;
 import cz.cvut.fit.zum.data.Edge;
-//import cz.cvut.fit.zum.data.Nodes;
 import cz.cvut.fit.zum.api.Node;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-//import java.util.Arrays;
 import java.util.Random;
-//import java.util.List;
-//import java.util.Collections;
-//import java.lang.Math;
 
 /**
  * @author Josef Struz
@@ -63,21 +56,19 @@ public class Individual extends AbstractIndividual {
                 }
             }
             this.repair();
-            HillClimb(this.evolution.getGenerations() / 100);
+            simulatedAnnealing(this.evolution.getGenerations() / 100);
             this.repair();
             this.minimalize();
 
         }
     }
 
-    private void HillClimb(int numberOfSteps) {
+    private void simulatedAnnealing(int numberOfSteps) {
         Random rndm = new Random();
 
-        //int numberOfGens = (int)(this.evolution.getNodesCount() * this.evolution.getMutationProbability());
         int numberOfGenMutated = (int) (this.evolution.getNodesCount() * this.evolution.getMutationProbability());
         //System.out.println("number of gen mutated: " + numberOfGenMutated);
 
-        //Individual next = new Individual(this.evolution, false);
         for (int i = 0; i < numberOfSteps; i++) {
 
             Individual next = this.deepCopy();
@@ -183,7 +174,7 @@ public class Individual extends AbstractIndividual {
         Individual son = new Individual(evolution, false, trueValues, falseValues);
         Individual deauther = new Individual(evolution, false, trueValues, falseValues);
         boolean change[] = new boolean[this.gen.length];
-        int numOfChanges = 0;
+        //int numOfChanges = 0;
 
         for (int i = 0; i < this.gen.length; i++) {
             son.gen[i] = this.gen[i];
@@ -219,7 +210,7 @@ public class Individual extends AbstractIndividual {
                     son.gen[expand.get(0)] = partner.isNodeSelected(expand.get(0));
                     deauther.gen[expand.get(0)] = this.isNodeSelected(expand.get(0));
                     change[expand.get(0)] = true;
-                    numOfChanges++;
+                    //numOfChanges++;
                     for (int k = 0; k < StateSpace.getNode(expand.get(0)).expand().size(); k++) {
                         if (!change[StateSpace.getNode(expand.get(0)).expand().get(k).getId()]) {
                             expand.add(StateSpace.getNode(expand.get(0)).expand().get(k).getId());
@@ -321,7 +312,6 @@ public class Individual extends AbstractIndividual {
 
         Collections.shuffle(this.rndmEdges);
 
-        //this.computeFitness();
         boolean unnecessary;
         int counter = 0;
 
@@ -362,15 +352,7 @@ public class Individual extends AbstractIndividual {
          * list of indices of nodes in the vertex cover
          */
         int i = 0;
-        /*
-        for (; i < this.gen.length; i++) {
-            if (this.gen[i]) {
-                sb.append(i);
-                i++;
-                break;
-            }
-        }
-         */
+
         for (; i < this.gen.length; i++) {
             if (this.gen[i]) {
                 sb.append("1");

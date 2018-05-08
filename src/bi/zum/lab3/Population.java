@@ -1,9 +1,6 @@
 package bi.zum.lab3;
 
-//import cz.cvut.fit.zum.api.ga.AbstractEvolution;
-import cz.cvut.fit.zum.api.ga.AbstractIndividual;
 import cz.cvut.fit.zum.api.ga.AbstractPopulation;
-//import cz.cvut.fit.zum.data.StateSpace;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -20,17 +17,10 @@ public class Population extends AbstractPopulation {
         individuals = new Individual[size];
         for (int i = 0; i < individuals.length; i++) {
             individuals[i] = new Individual(evolution, true, trueVal, falseVal);
-            //individuals[i].computeFitness();
         }
 
     }
 
-    /**
-     * Method to select individuals from population
-     *
-     * @param count The number of individuals to be selected
-     * @return List of selected individuals
-     */
     @Override
     public int size() {
         return individuals.length;
@@ -96,22 +86,12 @@ public class Population extends AbstractPopulation {
     public List<Individual> selectIndividuals(int count) {
         ArrayList<Individual> selected = new ArrayList<>();
 
-        // example of random selection of N individuals
-        /*
-        AbstractIndividual individual = individuals[rndm.nextInt(individuals.length)];
-        while (selected.size() < count) {
-            selected.add(individual);
-            individual = individuals[rndm.nextInt(individuals.length)];
-        }
-         */
-        // TODO: implement your own (and better) method of selection
         Random rndm = new Random();
         int membersCount = this.individuals.length / 10 * 4;
         if (membersCount == 0 && this.individuals.length >= 1) {
             membersCount = 1;
         }
         while (selected.size() < count) {
-            //System.out.println("bi.zum.lab3.Population.selectIndividuals() " + membersCount);
 
             double bestFitness = Double.NEGATIVE_INFINITY;
             Individual winner = null;
